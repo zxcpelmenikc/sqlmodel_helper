@@ -1,7 +1,21 @@
-from sqlmodel import SQLModel, Field,Relationship
+from typing import Optional, List, TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
+if TYPE_CHECKING:
+    from .roles import Roles
 
 
-class Users(SQLModel,table=True):
-    id: int = Field(default=None,primary_key=True)
-    username: str = Field(max_length=100)
-    password_hash: str = Field(max_length=255)
+class Users(SQLModel, table=True):
+    id: Optional[int] = Field(primary_key=True, default=None)
+    username: str = Field(max_length=255, unique=True)
+    password: str = Field(max_length=255)
+    role_id: int = Field(foreign_key="roles.id", default=2)
+    role: "Roles" = Relationship(back_populates="user_role")
+
+
+
+# self.id=id
+# self.username=username
+# self.password_hash=password_hash
+# self.employee_id=employee_id
+# self.create_at=create_at
+# self.last_login=last_login

@@ -1,34 +1,29 @@
-from db.database import init_db
-from controllers.employees_controller import add_employees, get_all_employees
-from views.employee_view import add_employee, print_all_employees
+from fastapi_pagination import add_pagination
+from app.db.database import *
+from app.controllers.employees_controller import get_employees
+from fastapi import FastAPI, Depends
+from contextlib import asynccontextmanager
+from app.api.v1.employee_router import router
+from app.api.v1.api_users_router import router as user_router
+from app.core.security import oauth2_scheme
+from typing import Annotated
+from app.api.v1.departments_router import router as dept_router
+from app.api.v1.staffing_table_router import router as staffing_router
 
 
-from registration import reg
-def main_menu():
-    if not reg():
-        return
+@asynccontextmanager
+async def on_startup(app: FastAPI):
     init_db()
-    while True:
-        print("\n--- Меню ---")
-        print("1. Добавить сотрудника")
-        print("2. Показать всех сотрудников")
-        print("0. Выход")
-        choice = input("Выберите действие: ")
+    yield
+    close_db()
+app_v1 = FastAPI(lifespan=on_startup)
+async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}
 
-        if choice == "1":
-            data = add_employee()
-            add_employees(*data)
-            print("Сотрудник добавлен.")
-        elif choice == "2":
-            employees = get_all_employees()
-            print_all_employees(employees)
-        elif choice == "0":
-            print("Выход.")
-            break
-        else:
-            print("Некорректный выбор. Попробуйте снова.")
+app_v1.include_router(user_router, prefix="/api/v1")
+app_v1.include_router(router, prefix="/api/v1")
+app_v1.include_router(dept_router, prefix="/api/v1")
+app_v1.include_router(staffing_router, prefix="/api/v1")
 
-if __name__ == "__main__":
-    main_menu()
-
+add_pagination(app_v1)
 
