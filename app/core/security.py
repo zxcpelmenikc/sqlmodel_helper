@@ -19,6 +19,10 @@ from jose import jwt, JWTError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
+# Константы ролей
+ROLE_ADMIN = 1  # Администратор
+ROLE_USER = 2   # Обычный пользователь
+ROLE_HR = 3     # Работник отдела кадров
 
 load_dotenv()  # загрузка переменных из .env
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -78,9 +82,24 @@ def admin_required(user: Users = Depends(get_current_user), session=Depends(get_
     :param session: сессия для базы данных
     :return: объект Users или исключение HTTPException 403
     """
-    if user.role_id != 1:
+    if user.role_id != ROLE_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Требуются права администратора"
+        )
+    return user
+
+
+def admin_or_hr_required(user: Users = Depends(get_current_user), session=Depends(get_session)):
+    """
+    Проверка роли администратора или работника отдела кадров
+    :param user: Объект класса Users
+    :param session: сессия для базы данных
+    :return: объект Users или исключение HTTPException 403
+    """
+    if user.role_id not in [ROLE_ADMIN, ROLE_HR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуются права администратора или работника отдела кадров"
         )
     return user

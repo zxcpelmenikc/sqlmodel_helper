@@ -7,37 +7,39 @@ from app.controllers.staffing_table_controller import change_staffing_table_info
 from fastapi_pagination import Page
 from app.schemas.employees import EmployeeSchema
 from app.models.employees import Employees
-from app.models.staffing_table import Staffing_table
+
 from app.models.users import Users
-from app.core.security import admin_required
-from app.models.departments import Departments
+from app.core.security import admin_required, admin_or_hr_required
+
+from app.schemas.employees_chema import EmployeeSchemaBase as ESUI, EmployeeResponseSchema
+
 
 
 router = APIRouter()
 
-@router.post("/add_employee", tags=["employees"], description="Добавить работника/принять его на работу")
-def add_employee_route(data: dict, session: Session = Depends(get_session),current_user: Users = Depends(admin_required)):
-    return add_employee(data, session)
+@router.post("/add_employee", tags=["Работники"], description="Добавить работника/принять его на работу", response_model=Employees)
+def add_employee_route(form_data: ESUI, session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
+    return add_employee(form_data, session)
 
-@router.get("/employees", response_model= Page[Employees],tags=["employees"], description="Вывести список всех работников")
+@router.get("/employees", response_model=Page[EmployeeResponseSchema], tags=["Работники"], description="Вывести список всех работников")
 def list_employees_route(session: Session = Depends(get_session)):
     return get_employees(session)
 
 
 
 # GET для списка штатных позиций с именем департамента
-@router.get("/employees_by_department/{department_id}", response_model=list[EmployeeSchema], tags=["employees"], description="Вывести список работников по отделениям") 
+@router.get("/employees_by_department/{department_id}", response_model=list[EmployeeSchema], tags=["Работники"], description="Вывести список работников по отделениям") 
 def employees_by_department(department_id: int, session: Session = Depends(get_session)):
     return ged(department_id, session)
 
-@router.put("/employee/{id}", tags=["employees"], description="Изменить информация о работнике ")
-def update_employee_info(id: int, data: Employees, session: Session = Depends(get_session), current_user: Users = Depends(admin_required)):
-    return cei(id, data, session)
+@router.put("/employee/{id}", tags=["Работники"], description="Изменить информация о работнике ", response_model=EmployeeResponseSchema)
+def update_employee_info(id: int, form_data: ESUI, session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
+    return cei(id, form_data, session)
 
-@router.put("/employees_changed_position/{position_id}", tags=["employees"], description="Перевод работника на новую должность")
-def employees_changed_position(id: int, position_id:int,  session: Session = Depends(get_session), current_user: Users = Depends(admin_required)):
+@router.put("/employees_changed_position/{position_id}", tags=["Работники"], description="Перевод работника на новую должность")
+def employees_changed_position(id: int, position_id:int,  session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return cep(id,position_id, session)
 
-@router.get("/fired_employees", response_model= Page[Employees],tags=["employees"], description="Вывести список уволеных работников")
+@router.get("/fired_employees", response_model= Page[Employees],tags=["Работники"], description="Вывести список уволеных работников")
 def list_fired_employees_route(session: Session = Depends(get_session)):
     return gue(session)

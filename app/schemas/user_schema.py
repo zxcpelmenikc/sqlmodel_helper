@@ -2,7 +2,7 @@ from pydantic  import BaseModel
 
 from fastapi import Form
 from sqlmodel import Field
-
+from datetime import date
 from pydantic import BaseModel
 from fastapi import Form
 
@@ -41,3 +41,4 @@ class UserSchemaCreateAsAdmin(BaseModel):
         role_id: int = Form(..., description="ID роли")):
         
         return cls(username=username, password=password, role_id=role_id)
+    

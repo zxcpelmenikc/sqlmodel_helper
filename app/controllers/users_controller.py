@@ -7,7 +7,7 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlmodel import paginate
 from sqlmodel import select, Session
 from sqlalchemy.exc import IntegrityError
-from app.core.security import create_access_token, decode_token, admin_required
+from app.core.security import create_access_token, decode_token, admin_required, ROLE_HR
 from app.db.session import get_session
 from app.models.users import Users
 from app.schemas.user_schema import UserSchema, UserSchemaCreate, UserSchemaCreateAsAdmin
@@ -37,13 +37,34 @@ def registration(data:UserSchemaCreate=Depends(UserSchemaCreate.as_form),session
         detail=f"Внутренняя ошибка сервера: {str(e)}")
 
 
-def admin_registration(data: UserSchemaCreateAsAdmin, user: Users = Depends(admin_required), session: Session = Depends(get_session)):
+def admin_registration(data: UserSchemaCreateAsAdmin, user: Users, session: Session):
     """ Добавление пользователя администратором """
     try:
         obj = Users(
             username=data.username,
             password=ph.hash(data.password),
             role_id=data.role_id
+        )
+        session.add(obj)
+        session.commit()
+        session.refresh(obj)
+        return obj
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Ошибка: дубликат или нарушение целостности данных")
+    except Exception as e:
+        session.rollback()
+        raise HTTPException( status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=f"Внутренняя ошибка сервера: {str(e)}")
+
+def hr_registration(data: UserSchemaCreate, session: Session):
+    """ Добавление пользователя с ролью работника отдела кадров (доступно без авторизации) """
+    try:
+        obj = Users(
+            username=data.username,
+            password=ph.hash(data.password),
+            role_id=ROLE_HR  # Устанавливаем роль HR (3)
         )
         session.add(obj)
         session.commit()

@@ -1,14 +1,13 @@
-from app.models.employees import Employees
-from app.models.positions import Positions
+from app.models.vacancies import Vacancies
 from sqlmodel import Session, select
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from typing import List
 import json
-from fastapi_pagination import paginate, Params
-from app.schemas.employees_chema import EmployeeSchemaBase as ESUI
+from app.schemas.vacancies_schema import VacancySchemaBase
 
-def add_employee(data: ESUI, session: Session):
+def create_vacancy(data: VacancySchemaBase, session: Session) -> Vacancies:
+    """Создать новую вакансию"""
     try:
         # Нормализуем payload в dict
         if hasattr(data, "dict"):
@@ -30,14 +29,15 @@ def add_employee(data: ESUI, session: Session):
         # Исключаем id из payload при создании, чтобы БД сгенерировала его автоматически
         payload.pop('id', None)
         
-        employee = Employees(**payload)
-        session.add(employee)
+        vacancy = Vacancies(**payload)
+        session.add(vacancy)
         session.commit()
-        session.refresh(employee)
-        return employee
+        session.refresh(vacancy)
+        return vacancy
     except IntegrityError as e:
         session.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
+                            detail=f"Ошибка: дубликат или нарушение целостности данных: {str(e)}")
     except HTTPException:
         raise
     except Exception as e:
@@ -45,45 +45,32 @@ def add_employee(data: ESUI, session: Session):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Внутренняя ошибка сервера: {e}")
 
-def get_employees(session: Session,  page: int = 1, size: int = 19) -> List[Employees]:
+def get_vacancies(session: Session) -> List[Vacancies]:
+    """Получить все вакансии"""
     try:
-        sql = select(Employees)
+        sql = select(Vacancies)
         result = session.exec(sql).all()
-        return paginate(result)
+        return result
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Внутренняя ошибка сервера: {str(e)}")
-    
 
-def get_employees_by_department(id_dep:int, session: Session):
+def get_vacancy_by_id(id: int, session: Session) -> Vacancies:
+    """Получить вакансию по ID"""
     try:
-        stmt = (
-            select(
-                Employees.id,
-                Employees.first_name,
-                Employees.last_name,
-                Positions.name_position
-            )
-            .join(Positions, Employees.position_id == Positions.id_pos, isouter=True)
-            .where(Employees.department_id == id_dep)
-        )
-        rows = session.exec(stmt).all()
-        items = []
-        for id, first_name, last_name, position_name in rows:
-            items.append({
-                "id": id,
-                "first_name": first_name,
-                "last_name": last_name,
-                "position_name": position_name
-            })
-        
-        return items
+        vacancy = session.get(Vacancies, id)
+        if not vacancy:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                                detail="Вакансия не найдена")
+        return vacancy
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Внутренняя ошибка сервера: {str(e)}")
-    
 
-def change_employee_info(id: int, data, session: Session) -> Employees:
+def update_vacancy(id: int, data: VacancySchemaBase, session: Session) -> Vacancies:
+    """Обновить вакансию"""
     try:
         # Нормализуем payload в dict
         if hasattr(data, "dict"):
@@ -102,43 +89,44 @@ def change_employee_info(id: int, data, session: Session) -> Employees:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Ожидается объект (dict/SQLModel/Pydantic)")
 
-        result = session.get(Employees, id)
-        if not result:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="идентификатор не найден")
+        vacancy = session.get(Vacancies, id)
+        if not vacancy:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                                detail="Вакансия не найдена")
 
         # Обновляем поля
         for key, value in payload.items():
-            setattr(result, key, value)
+            setattr(vacancy, key, value)
 
         session.commit()
-        session.refresh(result)
-        return result
+        session.refresh(vacancy)
+        return vacancy
+    except HTTPException:
+        raise
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Внутренняя ошибка сервера: {str(e)}")
-    
 
-def change_employee_position(id: int, position_id: int, session: Session, ) -> Employees:
+def delete_vacancy(id: int, session: Session) -> dict:
+    """Удалить вакансию"""
     try:
-        employee = session.get(Employees, id)
-        if not employee:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="идентификатор не найден")
-
-        employee.position_id = position_id
+        vacancy = session.get(Vacancies, id)
+        if not vacancy:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                                detail="Вакансия не найдена")
+        
+        session.delete(vacancy)
         session.commit()
-        session.refresh(employee)
-        return employee
+        return {"message": "Вакансия успешно удалена", "id": id}
+    except HTTPException:
+        raise
+    except IntegrityError as e:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Невозможно удалить вакансию: она используется в других таблицах")
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Внутренняя ошибка сервера: {str(e)}")
-    
-def get_unoctive_employees(session: Session,  page: int = 1, size: int = 19) -> List[Employees]:
-    try:
-        sql = select(Employees).where(Employees.is_active== False)
-        result = session.exec(sql).all()
-        return paginate(result)
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Внутренняя ошибка сервера: {str(e)}")
+
