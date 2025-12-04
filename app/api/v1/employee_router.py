@@ -22,14 +22,14 @@ def add_employee_route(form_data: ESUI, session: Session = Depends(get_session),
     return add_employee(form_data, session)
 
 @router.get("/employees", response_model=Page[EmployeeResponseSchema], tags=["Работники"], description="Вывести список всех работников")
-def list_employees_route(session: Session = Depends(get_session)):
+def list_employees_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return get_employees(session)
 
 
 
 # GET для списка штатных позиций с именем департамента
 @router.get("/employees_by_department/{department_id}", response_model=list[EmployeeSchema], tags=["Работники"], description="Вывести список работников по отделениям") 
-def employees_by_department(department_id: int, session: Session = Depends(get_session)):
+def employees_by_department(department_id: int, session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return ged(department_id, session)
 
 @router.put("/employee/{id}", tags=["Работники"], description="Изменить информация о работнике ", response_model=EmployeeResponseSchema)
@@ -41,5 +41,5 @@ def employees_changed_position(id: int, position_id:int,  session: Session = Dep
     return cep(id,position_id, session)
 
 @router.get("/fired_employees", response_model= Page[Employees],tags=["Работники"], description="Вывести список уволеных работников")
-def list_fired_employees_route(session: Session = Depends(get_session)):
+def list_fired_employees_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return gue(session)

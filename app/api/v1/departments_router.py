@@ -10,7 +10,7 @@ from app.models.departments import Departments
 router = APIRouter()
 
 @router.get("/departments",tags=["Отделы"], description="Вывести все отделения")
-def list_department_route(session: Session = Depends(get_session)):
+def list_department_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return get_department(session)
 
 @router.put("/department/{id_dep}",tags=["Отделы"], description="Изменить данные отделения")

@@ -52,33 +52,4 @@ class EmployeeResponseSchema(BaseModel):
     dismissal_date: Optional[date] = None
     is_active: bool
 
-# class EmployeeSchemaUpdateInfo(EmployeeSchemaBase):
-#     @classmethod
-#     def as_form(cls,
-#         last_name: str = Form(..., description="Имя пользователя"),
-#         first_name: str = Form(..., description="Пароль"),
-#         middle_name: str = Form(..., description="отчество"),
-#         tab_number: int = Form(..., description="Табельный номер"),
-#         department_id: int = Form(..., description="ID отдела"),
-#         position_id: int = Form(..., description="ID должности"),   
-#         inn: str = Form(..., description="ИНН"),
-#         snils: str = Form(..., description="СНИЛС"),
-#         gender: str = Form(..., description="Пол"),
-#         birth_date: date = Form(..., description="Дата рождения"),
-#         birth_place: str = Form(..., description="Место рождения"),
-#         address: str = Form(..., description="Адрес"),
-#         education: str = Form(..., description="Образование"),
-#         profession: str = Form(..., description="Профессия"),
-#         marital_status: str = Form(..., description="Семейное положение"),
-#         hire_date: date = Form(..., description="Дата приема на работу"),
-#         dismissal_date: date = Form(None, description="Дата увольнения"),
-#         is_active: bool = Form(..., description="Активен ли сотрудник")
-#     ):
-#         return cls(
-#             last_name=last_name, first_name=first_name, middle_name=middle_name,
-#             tab_number=tab_number, department_id=department_id, position_id=position_id,
-#             inn=inn, snils=snils, gender=gender, birth_date=birth_date, birth_place=birth_place,
-#             address=address, education=education, profession=profession, marital_status=marital_status,
-#             hire_date=hire_date, dismissal_date=dismissal_date, is_active=is_active
-#         )
 
