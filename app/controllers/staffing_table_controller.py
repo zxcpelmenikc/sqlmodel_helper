@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from fastapi import HTTPException, status
 from app.models.staffing_table import Staffing_table
 from app.models.departments import Departments
-from sqlmodel import Session
+from app.models.employees import Employees
 from sqlalchemy.orm import selectinload
 from app.db.session import get_session
 from typing import List
@@ -55,4 +55,61 @@ def get_staffing_with_dept_rel(session: Session):
         result.append(rec)
   
     return result
+
+def update_units_in_staffing_table(session: Session) -> List[Staffing_table]:
+    """
+    Подсчитывает количество работников с теми же dep_id и pos_id для каждой записи
+    в staffing_table и обновляет поле units.
+    
+    Args:
+        session: Сессия базы данных
+        
+    Returns:
+        Список обновленных записей Staffing_table
+    """
+    try:
+        # Получаем все записи staffing_table
+        stmt = select(Staffing_table)
+        all_staffing = session.exec(stmt).all()
+        
+        updated_records = []
+        
+        for staffing_record in all_staffing:
+            dep_id = staffing_record.dep_id
+            pos_id = staffing_record.pos_id
+            
+            # Если dep_id или pos_id не указаны, устанавливаем units = 0
+            if dep_id is None or pos_id is None:
+                staffing_record.units = 0
+                session.add(staffing_record)
+                updated_records.append(staffing_record)
+                continue
+            
+            # Подсчитываем количество работников с теми же department_id и position_id
+            stmt_employees = select(Employees).where(
+                Employees.department_id == dep_id,
+                Employees.position_id == pos_id
+            )
+            employees = session.exec(stmt_employees).all()
+            count = len(employees)
+            
+            # Обновляем поле units
+            staffing_record.units = count
+            session.add(staffing_record)
+            updated_records.append(staffing_record)
+        
+        session.commit()
+        
+        # Обновляем объекты в сессии
+        for record in updated_records:
+            session.refresh(record)
+        
+        return updated_records
+        
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера при обновлении units: {str(e)}"
+        )
 

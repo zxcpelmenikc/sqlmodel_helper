@@ -13,6 +13,7 @@ class Staffing_table(SQLModel, table=True):
     pos_id: Optional[int] = Field(default=None, foreign_key="positions.id_pos")
 
     units: int = Field(default=1)
+    units_needed: int = Field(default=1)
     salary: Optional[float] = Field(default=0)
     nadbavki: Optional[float] = Field(default=0)
     total_salary: Optional[float] = Field(default=0)

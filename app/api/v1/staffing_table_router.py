@@ -3,7 +3,11 @@ from sqlmodel import Session
 from app.db.session import get_session
 from app.controllers.employees_controller import add_employee, get_employees, get_employees_by_department as ged, change_employee_info as cei, change_employee_position as cep
 from app.controllers.departments_controller import change_department_info, get_department
-from app.controllers.staffing_table_controller import change_staffing_table_info as csti, get_staffing_with_dept_rel as gswdr
+from app.controllers.staffing_table_controller import (
+    change_staffing_table_info as csti, 
+    get_staffing_with_dept_rel as gswdr,
+    update_units_in_staffing_table
+)
 from fastapi_pagination import Page
 from app.schemas.employees import EmployeeSchema
 from app.models.employees import Employees
@@ -24,3 +28,11 @@ def get_staffing_with_dept_rel_route(session: Session = Depends(get_session)):
 @router.put("/staffing_table/{id}",tags=["Штатное расписание"], description= "Изменение расписания")
 def update_staffing_info(id: int, data: Staffing_table, session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return csti(id, data, session)
+
+@router.post("/staffing_table/update_units", tags=["Штатное расписание"], description="Обновить количество работников (единицы) для всех записей штатного расписания")
+def update_units_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
+    """
+    Подсчитывает количество работников с теми же dep_id и pos_id для каждой записи
+    в штатном расписании и обновляет поле units (единицы).
+    """
+    return update_units_in_staffing_table(session)
