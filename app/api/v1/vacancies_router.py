@@ -14,36 +14,65 @@ from app.schemas.vacancies_schema import VacancySchemaBase, VacancyResponseSchem
 
 router = APIRouter()
 
-@router.post("/vacancies", tags=["Вакансии и должности"], description="Создать новую вакансию", response_model=VacancyResponseSchema)
+@router.post("/vacancies", tags=["Вакансии и должности"], 
+             description="Создать новую вакансию в системе. "
+                        "**Доступ:** Только Администратор. "
+                        "**Возможности:** Добавление новой вакансии с указанием отдела, должности, "
+                        "количества мест и статуса (открыта/закрыта). "
+                        "**Требуемые данные:** Все поля согласно схеме VacancySchemaBase.",
+             response_model=VacancyResponseSchema)
 def create_vacancy_route(
     form_data: VacancySchemaBase,
     session: Session = Depends(get_session),
-    current_user: Users = Depends(admin_or_hr_required)
+    current_user: Users = Depends(admin_required)
 ):
     return create_vacancy(form_data, session)
 
-@router.get("/vacancies", tags=["Вакансии и должности"], description="Вывести все вакансии", response_model=list[VacancyResponseSchema])
+@router.get("/vacancies", tags=["Вакансии и должности"], 
+            description="Получить список всех вакансий в организации. "
+                      "**Доступ:** Все пользователи (без авторизации). "
+                      "**Возможности:** Просмотр всех открытых и закрытых вакансий с информацией об отделах, "
+                      "должностях и статусах. "
+                      "**Возвращает:** Список всех вакансий.",
+            response_model=list[VacancyResponseSchema])
 def list_vacancies_route(session: Session = Depends(get_session)):
     return get_vacancies(session)
 
-@router.get("/vacancies/{id}", tags=["Вакансии и должности"], description="Вывести вакансию по ID", response_model=VacancyResponseSchema)
+@router.get("/vacancies/{id}", tags=["Вакансии и должности"], 
+            description="Получить информацию о конкретной вакансии по её ID. "
+                      "**Доступ:** Все пользователи (без авторизации). "
+                      "**Возможности:** Просмотр детальной информации о вакансии. "
+                      "**Параметры:** id (ID вакансии). "
+                      "**Возвращает:** Полная информация о вакансии.",
+            response_model=VacancyResponseSchema)
 def get_vacancy_route(id: int, session: Session = Depends(get_session)):
     return get_vacancy_by_id(id, session)
 
-@router.put("/vacancies/{id}", tags=["Вакансии и должности"], description="Обновить вакансию", response_model=VacancyResponseSchema)
+@router.put("/vacancies/{id}", tags=["Вакансии и должности"], 
+            description="Обновить информацию о вакансии. "
+                      "**Доступ:** Только Администратор. "
+                      "**Возможности:** Изменение данных вакансии (отдел, должность, количество мест, статус). "
+                      "Можно использовать для закрытия вакансии (изменение статуса). "
+                      "**Параметры:** id (ID вакансии), данные для обновления согласно схеме VacancySchemaBase.",
+            response_model=VacancyResponseSchema)
 def update_vacancy_route(
     id: int,
     form_data: VacancySchemaBase,
     session: Session = Depends(get_session),
-    current_user: Users = Depends(admin_or_hr_required)
+    current_user: Users = Depends(admin_required)
 ):
     return update_vacancy(id, form_data, session)
 
-@router.delete("/vacancies/{id}", tags=["Вакансии и должности"], description="Удалить вакансию")
+@router.delete("/vacancies/{id}", tags=["Вакансии и должности"], 
+               description="Удалить вакансию из системы. "
+                         "**Доступ:** Только Администратор. "
+                         "**Возможности:** Полное удаление вакансии из базы данных. "
+                         "**Параметры:** id (ID вакансии для удаления).",
+               response_model=dict)
 def delete_vacancy_route(
     id: int,
     session: Session = Depends(get_session),
-    current_user: Users = Depends(admin_or_hr_required)
+    current_user: Users = Depends(admin_required)
 ):
     return delete_vacancy(id, session)
 

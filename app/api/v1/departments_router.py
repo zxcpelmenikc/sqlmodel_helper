@@ -9,10 +9,20 @@ from app.models.departments import Departments
 
 router = APIRouter()
 
-@router.get("/departments",tags=["Отделы"], description="Вывести все отделения")
+@router.get("/departments", tags=["Отделы"], 
+            description="Получить список всех отделов организации. "
+                      "**Доступ:** Администратор, HR-менеджер. "
+                      "**Возможности:** Просмотр всех отделов с их названиями и кодами. "
+                      "**Возвращает:** Список всех отделов с полной информацией.",
+            response_model=list[Departments])
 def list_department_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return get_department(session)
 
-@router.put("/department/{id_dep}",tags=["Отделы"], description="Изменить данные отделения")
+@router.put("/department/{id_dep}", tags=["Отделы"], 
+            description="Изменить данные отдела. "
+                      "**Доступ:** Администратор, HR-менеджер. "
+                      "**Возможности:** Обновление информации об отделе (название, код отдела). "
+                      "**Параметры:** id_dep (ID отдела), данные для обновления согласно модели Departments.",
+            response_model=Departments)
 def update_department_route(id_dep: int, data: Departments, session: Session = Depends(get_session),current_user: Users = Depends(admin_or_hr_required)):
     return change_department_info(id_dep, data, session)
