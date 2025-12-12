@@ -20,7 +20,8 @@ router = APIRouter()
                         "**Возможности:** Добавление новой вакансии с указанием отдела, должности, "
                         "количества мест и статуса (открыта/закрыта). "
                         "**Требуемые данные:** Все поля согласно схеме VacancySchemaBase.",
-             response_model=VacancyResponseSchema)
+             response_model=VacancyResponseSchema,
+             summary="Создать новую вакансию")
 def create_vacancy_route(
     form_data: VacancySchemaBase,
     session: Session = Depends(get_session),
@@ -34,7 +35,8 @@ def create_vacancy_route(
                       "**Возможности:** Просмотр всех открытых и закрытых вакансий с информацией об отделах, "
                       "должностях и статусах. "
                       "**Возвращает:** Список всех вакансий.",
-            response_model=list[VacancyResponseSchema])
+            response_model=list[VacancyResponseSchema],
+            summary="Получить список всех вакансий")
 def list_vacancies_route(session: Session = Depends(get_session)):
     return get_vacancies(session)
 
@@ -44,7 +46,8 @@ def list_vacancies_route(session: Session = Depends(get_session)):
                       "**Возможности:** Просмотр детальной информации о вакансии. "
                       "**Параметры:** id (ID вакансии). "
                       "**Возвращает:** Полная информация о вакансии.",
-            response_model=VacancyResponseSchema)
+            response_model=VacancyResponseSchema,
+            summary="Получить вакансию по ID")
 def get_vacancy_route(id: int, session: Session = Depends(get_session)):
     return get_vacancy_by_id(id, session)
 
@@ -54,7 +57,8 @@ def get_vacancy_route(id: int, session: Session = Depends(get_session)):
                       "**Возможности:** Изменение данных вакансии (отдел, должность, количество мест, статус). "
                       "Можно использовать для закрытия вакансии (изменение статуса). "
                       "**Параметры:** id (ID вакансии), данные для обновления согласно схеме VacancySchemaBase.",
-            response_model=VacancyResponseSchema)
+            response_model=VacancyResponseSchema,
+            summary="Обновить вакансию")
 def update_vacancy_route(
     id: int,
     form_data: VacancySchemaBase,
@@ -68,7 +72,8 @@ def update_vacancy_route(
                          "**Доступ:** Только Администратор. "
                          "**Возможности:** Полное удаление вакансии из базы данных. "
                          "**Параметры:** id (ID вакансии для удаления).",
-               response_model=dict)
+               response_model=dict,
+               summary="Удалить вакансию")
 def delete_vacancy_route(
     id: int,
     session: Session = Depends(get_session),

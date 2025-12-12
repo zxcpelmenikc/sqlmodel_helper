@@ -27,7 +27,8 @@ router = APIRouter()
                       "**Возможности:** Просмотр штатного расписания с названиями отделов и должностей "
                       "вместо только ID. Включает информацию о количестве единиц, зарплатах, надбавках. "
                       "**Возвращает:** Список записей штатного расписания с полными названиями отделов и должностей.",
-            response_model=list)
+            response_model=list,
+            summary="Получить штатное расписание")
 def get_staffing_with_dept_rel_route(session: Session = Depends(get_session)):
     return gswdr(session)
 
@@ -37,7 +38,8 @@ def get_staffing_with_dept_rel_route(session: Session = Depends(get_session)):
                       "**Возможности:** Обновление данных штатного расписания (количество единиц, зарплата, "
                       "надбавки, общая зарплата, детали). Можно обновить как все поля, так и только измененные. "
                       "**Параметры:** id (ID записи штатного расписания), данные для обновления согласно модели Staffing_table.",
-            response_model=Staffing_table)
+            response_model=Staffing_table,
+            summary="Изменить запись в штатном расписании")
 def update_staffing_info(id: int, data: Staffing_table, session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return csti(id, data, session)
 
@@ -48,6 +50,7 @@ def update_staffing_info(id: int, data: Staffing_table, session: Session = Depen
                         "штатного расписания на основе реального количества сотрудников с соответствующими "
                         "department_id и position_id. Полезно после массовых изменений в данных сотрудников. "
                         "**Возвращает:** Список обновленных записей штатного расписания.",
-             response_model=list[Staffing_table])
+             response_model=list[Staffing_table],
+             summary="Обновить количество работников в штатном расписании")
 def update_units_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return update_units_in_staffing_table(session)

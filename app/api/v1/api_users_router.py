@@ -17,7 +17,7 @@ router = APIRouter()
                         "**Возможности:** Создание нового пользователя с назначением роли администратора. "
                         "Только существующий администратор может создавать других администраторов. "
                         "**Требуемые данные:** username, password, role_id (ID роли администратора).",
-             response_model=Users)
+             response_model=Users, summary="Зарегистрироваться под ролью админа")
 def sign_up_as_admin_route(
     form_data: UserSchemaCreateAsAdmin = Depends(UserSchemaCreateAsAdmin.as_form),
     user: Users = Depends(admin_required),
@@ -31,7 +31,7 @@ def sign_up_as_admin_route(
                         "**Возможности:** Самостоятельная регистрация пользователя с ролью HR-менеджера. "
                         "Этот эндпоинт доступен без авторизации для упрощения процесса регистрации HR-специалистов. "
                         "**Требуемые данные:** username, password.",
-             response_model=Users)
+             response_model=Users,summary="Зарегистрироваться с правами HR-менеджера")
 def sign_up_as_hr_route(
     form_data: USC = Depends(USC.as_form),
     session: Session = Depends(get_session)
@@ -44,7 +44,7 @@ def sign_up_as_hr_route(
                         "**Возможности:** Самостоятельная регистрация нового пользователя с ролью обычного пользователя. "
                         "После регистрации пользователь получает базовый доступ к системе. "
                         "**Требуемые данные:** username, password.",
-             response_model=Users)
+             response_model=Users,summary="Регистрация")
 def sign_up(form_data: UserSchema=Depends(USC.as_form),session:Session=Depends(get_session)):
     return registration(form_data, session)
 
@@ -55,7 +55,7 @@ def sign_up(form_data: UserSchema=Depends(USC.as_form),session:Session=Depends(g
                         "Токен необходимо использовать в заголовке Authorization: Bearer <token> для доступа к защищенным ресурсам. "
                         "**Требуемые данные:** username, password. "
                         "**Возвращает:** access_token (токен доступа), token_type (тип токена - bearer).",
-             response_model=dict)
+             response_model=dict,summary="Вход")
 def login_route(form_data: UserSchema=Depends(UserSchema.as_form),session:Session=Depends(get_session)):
     return login(form_data,session)
 
@@ -66,7 +66,7 @@ def login_route(form_data: UserSchema=Depends(UserSchema.as_form),session:Sessio
                         "Используется для продления сессии пользователя. "
                         "**Требуемые данные:** refresh_token (refresh токен). "
                         "**Возвращает:** Новый access_token.",
-             response_model=dict)
+             response_model=dict,summary="Обновить токен доступа.")
 def refresh_token_route(refresh_token:str):
     return refresh_access_token(refresh_token)
 
@@ -77,6 +77,6 @@ def refresh_token_route(refresh_token:str):
                       "Результаты возвращаются с пагинацией. "
                       "**Параметры:** page (номер страницы), size (размер страницы). "
                       "**Возвращает:** Список пользователей с информацией о username и role_id.",
-            response_model=Page[Users])
+            response_model=Page[Users],summary="Получить список всех пользователей")
 def get_users_route(current_user: Users = Depends(admin_or_hr_required),session: Session=Depends(get_session)):
         return  get_users(current_user,session)

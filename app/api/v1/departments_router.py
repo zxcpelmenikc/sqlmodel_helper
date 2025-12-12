@@ -14,7 +14,7 @@ router = APIRouter()
                       "**Доступ:** Администратор, HR-менеджер. "
                       "**Возможности:** Просмотр всех отделов с их названиями и кодами. "
                       "**Возвращает:** Список всех отделов с полной информацией.",
-            response_model=list[Departments])
+            response_model=list[Departments],summary="Вывести список всех отделов")
 def list_department_route(session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
     return get_department(session)
 
@@ -23,6 +23,6 @@ def list_department_route(session: Session = Depends(get_session), current_user:
                       "**Доступ:** Администратор, HR-менеджер. "
                       "**Возможности:** Обновление информации об отделе (название, код отдела). "
                       "**Параметры:** id_dep (ID отдела), данные для обновления согласно модели Departments.",
-            response_model=Departments)
+            response_model=Departments,summary="Изменить данные отдела")
 def update_department_route(id_dep: int, data: Departments, session: Session = Depends(get_session),current_user: Users = Depends(admin_or_hr_required)):
     return change_department_info(id_dep, data, session)

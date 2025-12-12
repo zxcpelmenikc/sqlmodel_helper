@@ -20,7 +20,8 @@ router = APIRouter()
                         "**Возможности:** Добавление новой должности с названием и кодом должности. "
                         "Код должности должен соответствовать коду отдела (например, DEV-001 для отдела DEV). "
                         "**Требуемые данные:** name_position (название должности), code_position (код должности).",
-             response_model=PositionResponseSchema)
+             response_model=PositionResponseSchema,
+             summary="Создать новую должность")
 def create_position_route(
     form_data: PositionSchemaBase,
     session: Session = Depends(get_session),
@@ -33,7 +34,8 @@ def create_position_route(
                       "**Доступ:** Все пользователи (без авторизации). "
                       "**Возможности:** Просмотр всех доступных должностей с их названиями и кодами. "
                       "**Возвращает:** Список всех должностей.",
-            response_model=list[PositionResponseSchema])
+            response_model=list[PositionResponseSchema],
+            summary="Получить список всех должностей")
 def list_positions_route(session: Session = Depends(get_session)):
     return get_positions(session)
 
@@ -43,7 +45,8 @@ def list_positions_route(session: Session = Depends(get_session)):
                       "**Возможности:** Просмотр детальной информации о должности. "
                       "**Параметры:** id_pos (ID должности). "
                       "**Возвращает:** Полная информация о должности.",
-            response_model=PositionResponseSchema)
+            response_model=PositionResponseSchema,
+            summary="Получить должность по ID")
 def get_position_route(id_pos: int, session: Session = Depends(get_session)):
     return get_position_by_id(id_pos, session)
 
@@ -52,7 +55,8 @@ def get_position_route(id_pos: int, session: Session = Depends(get_session)):
                       "**Доступ:** Только Администратор. "
                       "**Возможности:** Изменение названия или кода должности. "
                       "**Параметры:** id_pos (ID должности), данные для обновления согласно схеме PositionSchemaBase.",
-            response_model=PositionResponseSchema)
+            response_model=PositionResponseSchema,
+            summary="Обновить должность")
 def update_position_route(
     id_pos: int,
     form_data: PositionSchemaBase,
@@ -67,7 +71,8 @@ def update_position_route(
                          "**Возможности:** Удаление должности. Внимание: удаление возможно только если "
                          "на этой должности нет сотрудников. "
                          "**Параметры:** id_pos (ID должности для удаления).",
-               response_model=dict)
+               response_model=dict,
+               summary="Удалить должность")
 def delete_position_route(
     id_pos: int,
     session: Session = Depends(get_session),
