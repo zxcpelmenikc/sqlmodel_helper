@@ -3,7 +3,6 @@ from sqlmodel import SQLModel, Field, Relationship
 from datetime import date
 
 if TYPE_CHECKING:
-    from app.models.employment_history import EmploymentHistory
     from app.models.departments import Departments
     from app.models.positions import Positions
 
@@ -32,4 +31,3 @@ class Employees(SQLModel, table=True):
 
     position: Optional["Positions"] = Relationship(back_populates="employees")
     department: Optional["Departments"] = Relationship(back_populates="employees")
-    employment_history: List["EmploymentHistory"] = Relationship(back_populates="employee")

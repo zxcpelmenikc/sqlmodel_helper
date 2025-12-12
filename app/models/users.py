@@ -11,11 +11,3 @@ class Users(SQLModel, table=True):
     role_id: int = Field(foreign_key="roles.id", default=2)
     role: "Roles" = Relationship(back_populates="user_role")
 
-
-
-# self.id=id
-# self.username=username
-# self.password_hash=password_hash
-# self.employee_id=employee_id
-# self.create_at=create_at
-# self.last_login=last_login

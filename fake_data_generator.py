@@ -14,6 +14,7 @@ from app.models.positions import Positions
 from app.models.users import Users
 from app.models.employees import Employees
 from app.models.staffing_table import Staffing_table
+from app.models.vacancies import Vacancies
 
 # Инициализация Faker с русской локалью
 fake = Faker('ru_RU')
@@ -426,6 +427,69 @@ def generate_staffing_table(session: Session, departments: list, positions: list
     return session.exec(select(Staffing_table)).all()
 
 
+def generate_vacancies(session: Session, departments: list, positions: list, count: int = 5):
+    """Генерация вакансий"""
+    print(f"Генерация {count} вакансий...")
+    vacancies = []
+    
+    # Проверяем существующие вакансии
+    existing_vacancies = session.exec(select(Vacancies)).all()
+    if existing_vacancies:
+        print(f"Найдено {len(existing_vacancies)} существующих вакансий")
+        return existing_vacancies
+    
+    # Статусы вакансий
+    statuses = ["open", "closed"]
+    
+    # Создаем комбинации отделов и должностей с совпадающими кодами
+    all_combinations = []
+    for dept in departments:
+        for pos in positions:
+            # Проверяем, что код должности начинается с кода отдела
+            if pos.code_position.startswith(dept.code_dep):
+                all_combinations.append((dept, pos))
+    
+    # Если нет подходящих комбинаций, используем любые
+    if not all_combinations:
+        print("Предупреждение: Не найдено комбинаций отделов и должностей с совпадающими кодами! Используются любые комбинации.")
+        for dept in departments:
+            for pos in positions:
+                all_combinations.append((dept, pos))
+    
+    # Ограничиваем количество комбинаций до count
+    if len(all_combinations) > count:
+        # Выбираем случайные комбинации
+        selected_combinations = random.sample(all_combinations, count)
+    else:
+        # Если комбинаций меньше count, повторяем некоторые
+        selected_combinations = all_combinations[:count]
+        while len(selected_combinations) < count:
+            selected_combinations.append(random.choice(all_combinations))
+    
+    # Для каждой выбранной комбинации создаем вакансию
+    for department, position in selected_combinations:
+        # Генерируем количество единиц (от 1 до 5)
+        units = random.randint(1, 5)
+        
+        # Выбираем случайный статус (70% открытых, 30% закрытых)
+        status = random.choices(statuses, weights=[70, 30])[0]
+        
+        vacancy = Vacancies(
+            dep_id=department.id_dep,
+            pos_id=position.id_pos,
+            units=units,
+            status=status
+        )
+        session.add(vacancy)
+        vacancies.append(vacancy)
+    
+    session.commit()
+    for vacancy in vacancies:
+        session.refresh(vacancy)
+    print(f"Создано {len(vacancies)} вакансий")
+    return session.exec(select(Vacancies)).all()
+
+
 def update_units_in_staffing_table(session: Session):
     """
     Подсчитывает количество работников с теми же dep_id и pos_id для каждой записи
@@ -499,6 +563,7 @@ def main():
             users = generate_users(session, roles, count=10)
             employees = generate_employees(session, departments, positions, count=50)
             staffing_table = generate_staffing_table(session, departments, positions, employees, count = 10)
+            vacancies = generate_vacancies(session, departments, positions, count=5)
             
             # Обновляем units в штатном расписании на основе реального количества сотрудников
             print("\nОбновление количества единиц (units) в штатном расписании...")
@@ -515,6 +580,7 @@ def main():
             print(f"  - Пользователей: {len(users)}")
             print(f"  - Сотрудников: {len(employees)}")
             print(f"  - Записей штатного расписания: {len(staffing_table)}")
+            print(f"  - Вакансий: {len(vacancies)}")
             print(f"\nДанные для входа:")
             print(f"  Администратор:")
             print(f"    Username: admin")
