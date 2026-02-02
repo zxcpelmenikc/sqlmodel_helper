@@ -117,7 +117,7 @@ def refresh_access_token(refresh_token: str):
         data={"sub": username, "type": "access"},
         expires_delta=timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))),
     )
-    return new_access_token
+    return {"access_token": new_access_token, "token_type": "bearer"}
 
 
 def get_users(user: Users = Depends(admin_required),session: Session = Depends(get_session), page: int = 1, size: int = 10) -> Page[Users]:
