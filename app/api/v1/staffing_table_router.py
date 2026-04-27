@@ -41,7 +41,12 @@ def get_staffing_with_dept_rel_route(session: Session = Depends(get_session)):
             response_model=Staffing_table,
             summary="Изменить запись в штатном расписании")
 def update_staffing_info(id: int, data: Staffing_table, session: Session = Depends(get_session), current_user: Users = Depends(admin_or_hr_required)):
-    return csti(id, data, session)
+    obj = csti(id, data, session)
+    # Ensure persistence even if controller forgot commit
+    session.add(obj)
+    session.commit()
+    session.refresh(obj)
+    return obj
 
 @router.post("/staffing_table/update_units", tags=["Штатное расписание"], 
              description="Автоматически обновить количество работников (единицы) для всех записей штатного расписания. "

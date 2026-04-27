@@ -37,6 +37,9 @@ def change_staffing_table_info(id: int, data, session: Session) -> Staffing_tabl
         for key, value in payload.items():
             setattr(result, key, value)
     
+        session.add(result)
+        session.commit()
+        session.refresh(result)
         return result
     except Exception as e:
         session.rollback()
@@ -47,9 +50,8 @@ def get_staffing_with_dept_rel(session: Session):
     staffings = session.exec(stmt).all()  # список Staffing_table
     result = []
     for s in staffings:
+        # Keep ids (dep_id/pos_id) for editing, add readable names.
         rec = s.dict()
-        rec = {k: v for k, v in s.dict().items() if k != "dep_id"}
-        rec = {k: v for k, v in s.dict().items() if k != "pos_id"}
         rec["department_name"] = s.department.name_dep if s.department else None
         rec["position_name"] = s.position.name_position if s.position else None
         result.append(rec)
